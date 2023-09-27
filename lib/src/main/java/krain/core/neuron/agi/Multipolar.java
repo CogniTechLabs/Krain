@@ -54,10 +54,88 @@
  * #############################################################################
  */
 
-package krain;
+package krain.core.neuron.agi;
 
-public class Library {
-    public boolean someLibraryMethod() {
-        return true;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class Multipolar {
+    private double membranePotential; // Membrane potential
+    private double restingPotential; // Resting potential
+    private double actionPotentialThreshold; // Threshold for firing
+    private boolean isExcitatory; // Indicates if the neuron is excitatory
+
+    public Multipolar(double restingPotential, double actionPotentialThreshold, boolean isExcitatory) {
+        this.restingPotential = restingPotential;
+        this.actionPotentialThreshold = actionPotentialThreshold;
+        this.membranePotential = restingPotential; // Initialize to resting potential
+        this.isExcitatory = isExcitatory;
+    }
+
+    public double getMembranePotential() {
+        return membranePotential;
+    }
+
+    public void receiveInput(double input) {
+        // Simulate input affecting the membrane potential
+        if (isExcitatory) {
+            membranePotential += input;
+        } else {
+            membranePotential -= input;
+        }
+    }
+
+    public void updateMembranePotential() {
+        // Simulate membrane potential dynamics (e.g., leakage)
+        // You can add more complex dynamics here if needed.
+        membranePotential -= 0.1; // Example: Gradually decrease potential
+    }
+
+    public boolean shouldFire() {
+        return membranePotential >= actionPotentialThreshold;
+    }
+
+    public void fire() {
+        System.out.println("Neuron fired!");
+        membranePotential = restingPotential; // Reset to resting potential after firing
+    }
+
+    public static void main(String[] args) {
+        // Create a list of neurons to simulate a neural network
+        List<Multipolar> neuralNetwork = new ArrayList<>();
+        Random random = new Random();
+
+        // Add excitatory neurons to the network
+        for (int i = 0; i < 5; i++) {
+            neuralNetwork.add(new Multipolar(-70.0, -55.0, true));
+        }
+
+        // Add inhibitory neurons to the network
+        for (int i = 0; i < 5; i++) {
+            neuralNetwork.add(new Multipolar(-70.0, -55.0, false));
+        }
+
+        // Simulate network activity
+        for (int timeStep = 0; timeStep < 10; timeStep++) {
+            System.out.println("Time Step " + timeStep);
+
+            // Provide random inputs to neurons
+            for (Multipolar neuron : neuralNetwork) {
+                neuron.receiveInput(random.nextDouble() * 10.0);
+            }
+
+            // Update membrane potentials
+            for (Multipolar neuron : neuralNetwork) {
+                neuron.updateMembranePotential();
+            }
+
+            // Check for firing and fire neurons
+            for (Multipolar neuron : neuralNetwork) {
+                if (neuron.shouldFire()) {
+                    neuron.fire();
+                }
+            }
+        }
     }
 }
