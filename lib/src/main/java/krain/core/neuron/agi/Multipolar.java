@@ -22,7 +22,7 @@
  *
  * Enforcement: Any violation of this license may result in legal action.
  *
- * Copyright (c) 2023, CogniTechLabs (Renato B. Lugto III)
+ * Copyright (c) 2023, CogniTechLabs (Renato Czarnezcki B. Bason)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -50,27 +50,30 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  *
- * Author: CogniTechLabs (Renato B. Lugto III)
+ * Author: CogniTechLabs (Renato Czarnezcki B. Bason)
  * #############################################################################
  */
 
 package krain.core.neuron.agi;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
 public class Multipolar {
-    private double membranePotential; // Membrane potential
-    private double restingPotential; // Resting potential
-    private double actionPotentialThreshold; // Threshold for firing
-    private boolean isExcitatory; // Indicates if the neuron is excitatory
+    private double membranePotential;
+    private double restingPotential;
+    private double actionPotentialThreshold;
+    private boolean isExcitatory;
+    private double[] synapticWeights; // Add synaptic weights
 
-    public Multipolar(double restingPotential, double actionPotentialThreshold, boolean isExcitatory) {
+    public Multipolar(double restingPotential, double actionPotentialThreshold, boolean isExcitatory, int numInputs) {
         this.restingPotential = restingPotential;
         this.actionPotentialThreshold = actionPotentialThreshold;
-        this.membranePotential = restingPotential; // Initialize to resting potential
+        this.membranePotential = restingPotential;
         this.isExcitatory = isExcitatory;
+        
+        // Initialize synaptic weights with small random values
+        synapticWeights = new double[numInputs];
+        for (int i = 0; i < numInputs; i++) {
+            synapticWeights[i] = Math.random() * 0.1;
+        }
     }
 
     public double getMembranePotential() {
@@ -101,40 +104,13 @@ public class Multipolar {
         membranePotential = restingPotential; // Reset to resting potential after firing
     }
 
-    public static void main(String[] args) {
-        // Create a list of neurons to simulate a neural network
-        List<Multipolar> neuralNetwork = new ArrayList<>();
-        Random random = new Random();
-
-        // Add excitatory neurons to the network
-        for (int i = 0; i < 5; i++) {
-            neuralNetwork.add(new Multipolar(-70.0, -55.0, true));
-        }
-
-        // Add inhibitory neurons to the network
-        for (int i = 0; i < 5; i++) {
-            neuralNetwork.add(new Multipolar(-70.0, -55.0, false));
-        }
-
-        // Simulate network activity
-        for (int timeStep = 0; timeStep < 10; timeStep++) {
-            System.out.println("Time Step " + timeStep);
-
-            // Provide random inputs to neurons
-            for (Multipolar neuron : neuralNetwork) {
-                neuron.receiveInput(random.nextDouble() * 10.0);
-            }
-
-            // Update membrane potentials
-            for (Multipolar neuron : neuralNetwork) {
-                neuron.updateMembranePotential();
-            }
-
-            // Check for firing and fire neurons
-            for (Multipolar neuron : neuralNetwork) {
-                if (neuron.shouldFire()) {
-                    neuron.fire();
-                }
+    public void adapt(double[] input) {
+        // Simulate Hebbian learning
+        for (int i = 0; i < synapticWeights.length; i++) {
+            if (isExcitatory) {
+                synapticWeights[i] += membranePotential * input[i];
+            } else {
+                synapticWeights[i] -= membranePotential * input[i];
             }
         }
     }

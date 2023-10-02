@@ -22,7 +22,7 @@
  *
  * Enforcement: Any violation of this license may result in legal action.
  *
- * Copyright (c) 2023, CogniTechLabs (Renato B. Lugto III)
+ * Copyright (c) 2023, CogniTechLabs (Renato Czarnezcki B. Bason)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -50,12 +50,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  *
- * Author: CogniTechLabs (Renato B. Lugto III)
+ * Author: CogniTechLabs (Renato Czarnezcki B. Bason)
  * #############################################################################
  */
 
-package krain.models;
+package krain.algorithm;
 
-public class AGI {
+public class RealtimeLearning {
     
+    public void learn() {
+        
+    }
 }

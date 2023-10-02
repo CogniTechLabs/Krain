@@ -22,7 +22,7 @@
  *
  * Enforcement: Any violation of this license may result in legal action.
  *
- * Copyright (c) 2023, CogniTechLabs (Renato B. Lugto III)
+ * Copyright (c) 2023, CogniTechLabs (Renato Czarnezcki B. Bason)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -50,7 +50,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
  * OF SUCH DAMAGE.
  *
- * Author: CogniTechLabs (Renato B. Lugto III)
+ * Author: CogniTechLabs (Renato Czarnezcki B. Bason)
  * #############################################################################
  */
 
@@ -75,12 +75,12 @@ public class MultipolarNetwork {
         // Random random = new Random();
 
         for (int i = 0; i < numNeuronsPerLayer.length; i++) {
-            int numNeurons = numNeuronsPerLayer[i];
+            int numInputs = numNeuronsPerLayer[i];
             boolean isExcitatory = isExcitatoryPerLayer[i];
 
             List<Multipolar> layerNeurons = new ArrayList<>();
 
-            for (int j = 0; j < numNeurons; j++) {
+            for (int j = 0; j < numInputs; j++) {
                 // double potentialModifier = isExcitatory ? 1.0 : -1.0;
                 double neuronRestingPotential = restingPotential;
                 double neuronThreshold = actionPotentialThreshold;
@@ -91,7 +91,7 @@ public class MultipolarNetwork {
                     neuronThreshold -= 5.0; // Example: Lower threshold for inhibitory neurons
                 }
 
-                layerNeurons.add(new Multipolar(neuronRestingPotential, neuronThreshold, isExcitatory));
+                layerNeurons.add(new Multipolar(neuronRestingPotential, neuronThreshold, isExcitatory, numInputs));
             }
 
             neuronLayers.add(layerNeurons);
