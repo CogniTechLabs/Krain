@@ -56,28 +56,46 @@
 
 package krain.core.constants;
 
+import java.util.HashMap;
+
 public class Neurotransmitters {
-    // This is in theory, it's not actual molecules
-    
-    // Amino Acid Neurotransmitters (in micromoles per liter, approximate values)
-    public static final float GLUTAMATE = 50.0f;
-    public static final float GABA = 10.0f;
-    public static final float SEROTONIN = 0.1f;
-    public static final float DOPAMINE = 0.01f;
-    public static final float ACETYLCHOLINE = 0.5f;
+    private static final HashMap<String, Double> neurotransmitters = new HashMap<>();
 
-    // Peptide Neurotransmitters (values can vary widely)
-    public static final float ENDORPHINS = 0.001f; // Note: These values can vary significantly.
-    public static final float SUBSTANCE_P = 0.0001f; // These are just rough estimates.
+    // Static initializer block to initialize neurotransmitters
+    static {
+        neurotransmitters.put("GLUTAMATE", 50.0);
+        neurotransmitters.put("GABA", 10.0);
+        neurotransmitters.put("SEROTONIN", 0.1);
+        neurotransmitters.put("DOPAMINE", 0.01);
+        neurotransmitters.put("ACETYLCHOLINE", 0.5);
+        neurotransmitters.put("ENDORPHINS", 0.001);
+        neurotransmitters.put("SUBSTANCE_P", 0.0001);
+        neurotransmitters.put("NOREPINEPHRINE", 0.01);
+        neurotransmitters.put("EPINEPHRINE", 0.001);
+    }
 
-    // Monoamine Neurotransmitters (in nanograms per milliliter, approximate values)
-    public static final float NOREPINEPHRINE = 0.01f;
-    public static final float EPINEPHRINE = 0.001f;
+    // Get the concentration of a neurotransmitter by name
+    public static double getConcentration(String name) {
+        Double concentration = neurotransmitters.get(name);
+        if (concentration != null) {
+            return concentration;
+        } else {
+            throw new IllegalArgumentException("Neurotransmitter not found: " + name);
+        }
+    }
 
-    // Other Neurotransmitters (values can vary, in picomoles per milliliter)
-    public static final float ACETYLCHOLINESTERASE = 5.0f;
-    public static final float ANANDAMIDE = 0.1f;
-    public static final float NITRIC_OXIDE = 0.05f;
+    // Method to release neurotransmitter
+    public static double release(String name, double yield) {
+        double concentration = getConcentration(name);
+        return Math.round(concentration * yield / 10.0);
+    }
+
+    public static void main(String[] args) {
+        // Example usage: release neurotransmitter and print the result
+        double releasedAmount = release("GLUTAMATE", 39.0);
+        System.out.println("Released amount of GLUTAMATE: " + releasedAmount);
+    }
 }
+
 
 
