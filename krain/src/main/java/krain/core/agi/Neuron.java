@@ -73,6 +73,8 @@ public class Neuron {
     private double inhibBaselineRate;
     private double inhibRefractoryPeriod;
 
+    private double learningRate;
+
     private boolean isExcit;
 
     private double lastOutput;
@@ -113,8 +115,8 @@ public class Neuron {
         System.out.println("Connected to neurons: " + neurons);
     }
 
-    public void getPreSynapses() {
-        System.out.println(preSynapses);
+    public ArrayList<Neuron> getPreSynapses() {
+        return preSynapses;
     }
 
     public void innerClock() {
@@ -129,51 +131,51 @@ public class Neuron {
         // System.out.println("Stimulated");
         double currentOutput[] = {0.0};
         AtomicBoolean refractory = new AtomicBoolean(false);
-
+    
         executor.execute(() -> {
             if (!refractory.get()) { // Check if not in refractory period
                 double output = 0.0;
-
+    
                 if (isExcit) {
                     if (excitBaselineRate + input >= excitThreshold) {
                         output = input;
-
-                        double excitLearningRate = calculateLearningRate(input); // Dynamic learning rate for excitatory neurons
-                        excitThreshold += excitLearningRate * input;
+    
+                        double excitlearningRate = calculateLearningRate(input); // Dynamic learning rate for excitatory neurons
+                        excitThreshold += excitlearningRate * input;
                     } else {
                         excitThreshold -= input;
                     }
                 } else {
                     if (inhibBaselineRate - input <= inhibThreshold) {
                         output = input;
-
-                        double inhibLearningRate = calculateLearningRate(input); // Dynamic learning rate for inhibitory neurons
-                        inhibThreshold += inhibLearningRate * input;
+    
+                        double inhiblearningRate = calculateLearningRate(input); // Dynamic learning rate for inhibitory neurons
+                        inhibThreshold += inhiblearningRate * input;
                     } else {
                         inhibThreshold -= input;
                     }
                 }
                 currentOutput[0] = output;
             }
-
-            // System.out.println(currentOutput[0]);
+    
+            System.out.println(currentOutput[1]);
             for (Neuron neuron : preSynapses) {
                 neuron.stimulate(currentOutput[0]);
             }
         });
-        if (isExcit) { // Check if the neuron is excitatory
+        if (isExcit) { // Check if the neuron is exciting
             refractory.set(true); // Set neuron to refractory state
-
+    
             // Simulating the refractory period using a timer
             ScheduledExecutorService refractoryTimer = Executors.newSingleThreadScheduledExecutor();
             refractoryTimer.schedule(() -> {
                 refractory.set(false); // Reset neuron to non-refractory state
             }, (long) excitRefractoryPeriod, TimeUnit.MILLISECONDS);
-
+    
             refractoryTimer.shutdown();
         } else {
             refractory.set(true); // Set neuron to refractory state
-
+    
             // Simulating the refractory period using a timer
             ScheduledExecutorService refractoryTimer = Executors.newSingleThreadScheduledExecutor();
             refractoryTimer.schedule(() -> {
@@ -183,12 +185,10 @@ public class Neuron {
             refractoryTimer.shutdown();
         }
     }
-    
-    private double calculateLearningRate(double input) {
+    protected double calculateLearningRate(double input) {
         // Example of a dynamic learning rate adjustment based on the input
-        double baseLearningRate = 0.1;
-        double dynamicRate = baseLearningRate * input; // Adjust as needed based on the specific scenario
-        return dynamicRate;
+        learningRate = learningRate * input; // Adjust as needed based on the specific scenario
+        return learningRate;
     }    
 
     public double getLastOutput() {
@@ -197,31 +197,5 @@ public class Neuron {
 
     public void stopThread() {
         executor.shutdown();
-    }
-
-    public static void main(String[] args) {
-        Neuron neuron11 = new Neuron(2.0, 0.5, 0.1);
-        Neuron neuron12 = new Neuron(2.2, 0.5, 0.07);
-        Neuron neuron21 = new Neuron(1.4, 0.3, 0.06);
-        Neuron neuron22 = new Neuron(1.5, 0.7, 0.08);
-
-        ArrayList<Neuron> layer2Neurons = new ArrayList<>();
-
-        layer2Neurons.add(neuron21);
-        layer2Neurons.add(neuron22);
-
-        neuron11.connectToPreSynapse(neuron21);
-        neuron11.connectToPreSynapse(neuron22);
-
-        neuron12.connectToPreSynapse(layer2Neurons);
-
-        System.out.println("Neuron 1 Layer 1 Presynapses:");
-        neuron11.getPreSynapses();
-
-        System.out.println("Neuron 2 Layer 1 Presynapses:");
-        neuron12.getPreSynapses();
-
-        neuron11.stimulate(4.5);
-        neuron12.stimulate(2.2);
     }
 }
