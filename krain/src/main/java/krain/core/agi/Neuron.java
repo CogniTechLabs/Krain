@@ -63,7 +63,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-
 public class Neuron {
     private double excitThreshold;
     private double excitBaselineRate;
@@ -79,7 +78,7 @@ public class Neuron {
 
     private double lastOutput;
 
-    private ArrayList<Neuron> preSynapses = new ArrayList<Neuron>();
+    private ArrayList<Neuron> preSynapses = new ArrayList<>();
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -87,8 +86,8 @@ public class Neuron {
         this.excitThreshold = threshold;
         this.excitBaselineRate = baselineRate;
         this.excitRefractoryPeriod = refractoryPeriod;
+        this.learningRate = 1.0;
         this.isExcit = true;
-
     }
 
     public Neuron(double threshold, double baselineRate, double refractoryPeriod, boolean isExcit) {
@@ -96,11 +95,13 @@ public class Neuron {
             this.inhibThreshold = threshold;
             this.inhibBaselineRate = baselineRate;
             this.inhibRefractoryPeriod = refractoryPeriod;
+            this.learningRate = 1.0;
             this.isExcit = false;
         } else {
             this.excitThreshold = threshold;
             this.excitBaselineRate = baselineRate;
             this.excitRefractoryPeriod = refractoryPeriod;
+            this.learningRate = 1.0;
             this.isExcit = true;
         }
     }
@@ -122,72 +123,90 @@ public class Neuron {
     public void innerClock() {
         ScheduledExecutorService clock = Executors.newSingleThreadScheduledExecutor();
         clock.scheduleAtFixedRate(() -> {
-            // Get the current time and display it (this can be replaced with your desired clock logic)
             System.out.println("Current time: " + System.currentTimeMillis());
         }, 0, 1, TimeUnit.SECONDS);
     }
 
     public void stimulate(double input) {
-        // System.out.println("Stimulated");
         double currentOutput[] = {0.0};
         AtomicBoolean refractory = new AtomicBoolean(false);
-    
+
         executor.execute(() -> {
-            if (!refractory.get()) { // Check if not in refractory period
-                double output = 0.0;
-    
-                if (isExcit) {
-                    if (excitBaselineRate + input >= excitThreshold) {
-                        output = input;
-    
-                        double excitlearningRate = calculateLearningRate(input); // Dynamic learning rate for excitatory neurons
-                        excitThreshold += excitlearningRate * input;
+            try {
+                if (!refractory.get()) {
+                    double output = 0.0;
+
+                    if (isExcit) {
+                        if (excitBaselineRate + input >= excitThreshold) {
+                            output = input;
+
+                            double excitlearningRate = calculateLearningRate(input);
+                            excitThreshold += excitlearningRate * input;
+                        } else {
+                            excitThreshold -= input;
+                        }
                     } else {
-                        excitThreshold -= input;
+                        if (inhibBaselineRate - input <= inhibThreshold) {
+                            output = input;
+
+                            double inhiblearningRate = calculateLearningRate(input);
+                            inhibThreshold += inhiblearningRate * input;
+                        } else {
+                            inhibThreshold -= input;
+                        }
                     }
-                } else {
-                    if (inhibBaselineRate - input <= inhibThreshold) {
-                        output = input;
-    
-                        double inhiblearningRate = calculateLearningRate(input); // Dynamic learning rate for inhibitory neurons
-                        inhibThreshold += inhiblearningRate * input;
-                    } else {
-                        inhibThreshold -= input;
-                    }
+                    currentOutput[0] = output;
                 }
-                currentOutput[0] = output;
-            }
-    
-            System.out.println(currentOutput[1]);
-            for (Neuron neuron : preSynapses) {
-                neuron.stimulate(currentOutput[0]);
+
+                System.out.println(currentOutput[0]);
+                for (Neuron neuron : preSynapses) {
+                    neuron.stimulate(currentOutput[0]);
+                }
+            } catch (Exception e) {
+                // Handle exceptions, log them, or take appropriate action
+                e.printStackTrace();
             }
         });
-        if (isExcit) { // Check if the neuron is exciting
-            refractory.set(true); // Set neuron to refractory state
-    
-            // Simulating the refractory period using a timer
+
+        if (isExcit) {
+            refractory.set(true);
+
             ScheduledExecutorService refractoryTimer = Executors.newSingleThreadScheduledExecutor();
             refractoryTimer.schedule(() -> {
-                refractory.set(false); // Reset neuron to non-refractory state
+                refractory.set(false);
             }, (long) excitRefractoryPeriod, TimeUnit.MILLISECONDS);
-    
+
             refractoryTimer.shutdown();
         } else {
-            refractory.set(true); // Set neuron to refractory state
-    
-            // Simulating the refractory period using a timer
+            refractory.set(true);
+
             ScheduledExecutorService refractoryTimer = Executors.newSingleThreadScheduledExecutor();
             refractoryTimer.schedule(() -> {
-                refractory.set(false); // Reset neuron to non-refractory state
+                refractory.set(false);
             }, (long) inhibRefractoryPeriod, TimeUnit.MILLISECONDS);
 
             refractoryTimer.shutdown();
         }
     }
+
     protected double calculateLearningRate(double input) {
-        // Example of a dynamic learning rate adjustment based on the input
-        learningRate = learningRate * input; // Adjust as needed based on the specific scenario
+        // Adjust the learning rate based on individual neuron activity
+        double maxExcitLearningRate = 10.0;
+        double minExcitLearningRate = 0.1;
+
+        double maxInhibLearningRate = 5.0;   
+        double minInhibLearningRate = 0.05;  
+    
+        double scaledActivity = Math.min(1.0, Math.abs(input / excitThreshold));
+    
+        if (isExcit) {
+            double adjustedLearningRate = minExcitLearningRate + (maxExcitLearningRate - minExcitLearningRate) * scaledActivity;
+            learningRate = adjustedLearningRate;
+        } else {
+            double adjustedLearningRate = maxInhibLearningRate - scaledActivity * (maxInhibLearningRate - minInhibLearningRate);
+            learningRate = adjustedLearningRate;
+        }
+    
         return learningRate;
     }    
 
@@ -197,5 +216,38 @@ public class Neuron {
 
     public void stopThread() {
         executor.shutdown();
+    }
+
+    public static void main(String[] args) {
+        try {
+            Neuron sillyNeuron = new Neuron(1.0, 0.4, 1000);
+            Neuron excitatoryNeuron = new Neuron(1.0, 0.5, 1000);
+
+            sillyNeuron.connectToPreSynapse(excitatoryNeuron);
+
+            System.out.println("sillyNeuron Information:");
+            System.out.println("Neurons connected to: " + sillyNeuron.preSynapses);
+            System.out.println("Threshold: " + sillyNeuron.excitThreshold);
+            System.out.println("Learning Rate: " + sillyNeuron.learningRate);
+
+            System.out.println("excitatoryNeuron Information:");
+            System.out.println("Threshold: " + excitatoryNeuron.excitThreshold);
+            System.out.println("Learning Rate: " + excitatoryNeuron.learningRate);
+
+            double input = 0.7;
+            sillyNeuron.stimulate(input);
+
+            System.out.println("sillyNeuron Information (after stimulation):");
+            System.out.println("Threshold: " + sillyNeuron.excitThreshold);
+            System.out.println("Learning Rate: " + sillyNeuron.learningRate);
+
+            System.out.println("excitatoryNeuron Information (after stimulation):");
+            System.out.println("Threshold: " + excitatoryNeuron.excitThreshold);
+            System.out.println("Learning Rate: " + excitatoryNeuron.learningRate);
+
+            // Continue testing or add more scenarios as needed
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
