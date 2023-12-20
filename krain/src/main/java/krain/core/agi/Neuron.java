@@ -138,21 +138,21 @@ public class Neuron {
 
                     if (isExcit) {
                         if (excitBaselineRate + input >= excitThreshold) {
-                            output = input;
+                            output = excitBaselineRate + input - excitThreshold;
 
-                            double excitlearningRate = calculateLearningRate(input);
-                            excitThreshold += excitlearningRate * input;
+                            // double excitlearningRate = calculateLearningRate(input);
+                            excitThreshold += excitBaselineRate + input - excitThreshold;
                         } else {
-                            excitThreshold -= input;
+                            excitThreshold -= excitBaselineRate + input - excitThreshold;
                         }
                     } else {
                         if (inhibBaselineRate - input <= inhibThreshold) {
-                            output = input;
+                            output = inhibBaselineRate - input + inhibThreshold;
 
-                            double inhiblearningRate = calculateLearningRate(input);
-                            inhibThreshold += inhiblearningRate * input;
+                            // double inhiblearningRate = calculateLearningRate(input);
+                            inhibThreshold += inhibBaselineRate - input + inhibThreshold;
                         } else {
-                            inhibThreshold -= input;
+                            inhibThreshold -= inhibBaselineRate - input + inhibThreshold;
                         }
                     }
                     currentOutput[0] = output;
@@ -189,6 +189,7 @@ public class Neuron {
         }
     }
 
+    /*
     protected double calculateLearningRate(double input) {
         // Adjust the learning rate based on individual neuron activity
         double maxExcitLearningRate = 10.0;
@@ -209,6 +210,7 @@ public class Neuron {
     
         return learningRate;
     }    
+    */
 
     public double getLastOutput() {
         return lastOutput;
@@ -220,7 +222,7 @@ public class Neuron {
 
     public static void main(String[] args) {
         try {
-            Neuron sillyNeuron = new Neuron(1.0, 0.4, 1000);
+            Neuron sillyNeuron = new Neuron(5.0, 0.4, 1000);
             Neuron excitatoryNeuron = new Neuron(1.0, 0.5, 1000);
 
             sillyNeuron.connectToPreSynapse(excitatoryNeuron);
